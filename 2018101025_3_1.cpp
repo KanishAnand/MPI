@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // taking input and output file path as input
+    // taking input and output file path as argument
     input_file_path = argv[1];
     output_file_path = argv[2];
 
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
         vector<int> color(LG_n + 1, -1);
         int start = 1, end, no_per_process = LG_n / numprocs;
 
-        // distributing nodes all processes
+        // distributing nodes to all processes
         for (int rec_id = 1; rec_id < numprocs; rec_id++) {
             end = start + no_per_process - 1;
             pair<int, int> pr = {start, end};
@@ -168,7 +168,6 @@ int main(int argc, char **argv) {
             }
 
             // sending upodated colors to each process for new iteration
-            // MPI_Bcast(&color[0], LG_n + 1, MPI_INT, root_process, MPI_COMM_WORLD);
             for (int rec_id = 1; rec_id < numprocs; rec_id++) {
                 if (finished[rec_id] == 1) {
                     continue;
@@ -240,7 +239,6 @@ int main(int argc, char **argv) {
         while (1) {
             // recieving colors
             vector<int> color(LG_n + 1);
-            // MPI_Bcast(&color[0], LG_n + 1, MPI_INT, root_process, MPI_COMM_WORLD);
             MPI_Recv(&color[0], LG_n + 1, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
             // find independent set
