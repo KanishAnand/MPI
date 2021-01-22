@@ -1,3 +1,11 @@
+# Parallel Sum
+
+## Description:
+
+A parallel approach using MPI is followed to find sum of the reciprocals of the squares of integer from 1 to N. Integers from 1 to N are divided equally to each process in form of pair of staring, ending point. Each process finds sum of reciprocal of sqaures of integers from this starting to ending point and pass back this sum to root process. Finally in root process value computed in this process and returned from each process is totalled to get the final output.
+
+## Analysis
+
 # Parallel Quick Sort
 
 ## Description:
@@ -22,12 +30,12 @@ A parallel approach is to be followed to color the edges of given graph in such 
 
 #### Implementation Steps:
 
-- Initially random numbers were assigned to each node.
-- Now each process is distributed nodes of the original graph equally in other words we divided our graph into subgraphs and passed the subgraph nodes to each process.
+- Initially assign random numbers to each node.
+- Now distribute nodes of original graph to each process equally or in other words divide original graph into subgraphs and pass the subgraph nodes to each process.
 - Each process has task to color its own subgraph but we need to do that parallely so that there are no color conflicts. For this we do this task in iterations.
 - In each iteration first find an independent set of subgraph from nodes which are not colored. Process of finding this independent set is that for all nodes which are not colored choose the ones having node value more than all its uncolored neighbours. This way we make an independent set.
-- Now as it is independent set we can color all nodes of independent set parallely in each process iteration wise. Color each node of independent set with smallest color not assigned to any of the neighbours this way we ensure that max number of colors used is not more than 1 + Delta of line graph.
-- At the end of each iteration send back colored nodes from each process back to root process. In the root process update color array and then broadcast it to all process for next iteration.
-- When a process finishes coloring its all nodes stop that process and mark it as done so that root process not waits for any communication with this process now.
+- Now as it is an independent set we can color all nodes of independent set parallely in each process iteration wise. Color each node of independent set with smallest color not assigned to any of the neighbours this way we ensure that max number of colors used is not more than 1 + Delta of line graph.
+- At the end of each iteration send back colored nodes from each process to root process. In the root process update color array and then broadcast it to all processes for next iteration.
+- When a process finishes coloring all its nodes stop that process and mark it as done so that root process not waits for any communication with this process now.
 
 ## Analysis
