@@ -44,16 +44,16 @@ int main(int argc, char **argv) {
             start += no_per_process;
         }
 
-        float ans = 0;
+        double ans = 0;
         // do remaining in root process
         for (int i = start; i <= n; i++) {
-            ans += 1.0 / (float)(i * i);
+            ans += 1.0 / (double)(i * i);
         }
 
-        float sum;
+        double sum;
         //recieve sum from each process
         for (int rec_id = 1; rec_id < numprocs; rec_id++) {
-            MPI_Recv(&sum, 1, MPI_FLOAT, rec_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&sum, 1, MPI_DOUBLE, rec_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             ans += sum;
         }
 
@@ -64,12 +64,12 @@ int main(int argc, char **argv) {
         pair<int, int> pr;
         MPI_Recv(&pr, 2, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-        float sum = 0;
+        double sum = 0;
         for (int i = pr.first; i < pr.second; i++) {
-            sum += 1.0 / (float)(i * i);
+            sum += 1.0 / (double)(i * i);
         }
 
-        MPI_Send(&sum, 1, MPI_FLOAT, root_process, 0, MPI_COMM_WORLD);
+        MPI_Send(&sum, 1, MPI_DOUBLE, root_process, 0, MPI_COMM_WORLD);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);

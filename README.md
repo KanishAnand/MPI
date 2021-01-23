@@ -6,14 +6,18 @@ A parallel approach using MPI is followed to find sum of the reciprocals of the 
 
 ## Analysis
 
-- For N = 1e4 and 11 processes: Time Taken: 0.0002231 seconds
+For N = 10000, Time Taken (in seconds):
+
+- 1 Process: 0.0002481
+- 4 Processes: 0.0002283
+- 11 Processes: 0.0002231
 
 # Parallel Quick Sort
 
 ## Description:
 
 A parallel approach using MPI is followed to sort given array using quick sort algorithm. Initially input array is divided into equal continous subarrays with size of each
-subarray depending upon total number of processes. Subarrays are passed to each process where each process sorts their recieved subarrays parallely using quick sort
+subarray depending upon total number of processes. Subarrays are passed to each process where each process sorts their recieved subarrays parallely using randomized quick sort
 algorithm. Now after each process sorts its subarray they send back the sorted subarray to root process. Root process also sorts its own part of the subarray.
 After recieving all sorted subarray all of them are merged using `C++ STL Set` as explained below.
 
@@ -24,7 +28,11 @@ subarray to which this smallest element belongs is inserted to set. The same pro
 
 ## Analysis
 
-- For N = 1e6 with random values of array from 0 till 1e9 and 11 processes: Time Taken: 0.7634
+For N = 1e6 with random values of array from 0 till 1e9, Time Taken (in seconds):
+
+- 1 Process: 0.718
+- 4 Processes: 0.7634
+- 11 Processes: 0.869
 
 # Parallel Edge Coloring
 
@@ -44,4 +52,8 @@ A parallel approach is to be followed to color the edges of given graph in such 
 
 ## Analysis
 
-- For 128 vertices and 774 edges(random) and 11 processes: Time Taken: 0.037641 seconds
+For 128 vertices and 774 edges(random), Time Taken (in seconds):
+
+- 1 Process: 0.03832
+- 4 Processes: 0.04283
+- 11 Processes: 0.037641
