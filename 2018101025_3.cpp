@@ -38,6 +38,28 @@ void color_it(vector<int> &independent_set, vector<vector<int>> &LG_adj,
     }
 }
 
+void find_independentSet(int start, int end, vector<int> &node_val,
+                         vector<int> &color, vector<vector<int>> &LG_adj,
+                         vector<int> &independent_set, int &done) {
+    for (int i = start; i <= end; i++) {
+        if (color[i] != -1) {
+            continue;
+        }
+
+        int flag = 1;
+        for (auto neigh : LG_adj[i]) {
+            if (color[neigh] == -1 && node_val[neigh] > node_val[i]) {
+                done = 0;
+                flag = 0;
+                break;
+            }
+        }
+        if (flag == 1) {
+            independent_set.push_back(i);
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     string input_file_path, output_file_path;
     if (argc != 3) {
@@ -45,11 +67,11 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // taking input and output file path as input
+    // taking input and output file path as argument
     input_file_path = argv[1];
     output_file_path = argv[2];
 
-    int rank, numprocs, CONTINUE_TAG = 0, STOP_TAG = 1;
+    int rank, numprocs;
 
     /* start up MPI */
     MPI_Init(&argc, &argv);
@@ -62,7 +84,7 @@ int main(int argc, char **argv) {
     int root_process = 0, REC = 1;
 
     int LG_n, LG_m;
-    vector<int> edge_first, edge_second;
+    vector<int> edge_first, edge_second, node_val;
 
     /* write your code here */
     if (rank == root_process) {
@@ -98,15 +120,8 @@ int main(int argc, char **argv) {
             }
         }
 
-        // broadcasting line graph
-        LG_m = edge_first.size();
-        MPI_Bcast(&LG_n, 1, MPI_INT, root_process, MPI_COMM_WORLD);
-        MPI_Bcast(&LG_m, 1, MPI_INT, root_process, MPI_COMM_WORLD);
-        MPI_Bcast(&edge_first[0], LG_m, MPI_INT, root_process, MPI_COMM_WORLD);
-        MPI_Bcast(&edge_second[0], LG_m, MPI_INT, root_process, MPI_COMM_WORLD);
-
         // initialising node values with random numbers
-        vector<int> node_val(LG_n + 2);
+        vector<int> node_val(LG_n + 1);
         vector<int> tmp;
         for (int i = 1; i <= LG_n; i++) {
             tmp.push_back(i);
@@ -116,71 +131,77 @@ int main(int argc, char **argv) {
             node_val[i] = tmp[i - 1];
         }
 
+        // broadcasting line graph
+        LG_m = edge_first.size();
+        MPI_Bcast(&LG_n, 1, MPI_INT, root_process, MPI_COMM_WORLD);
+        MPI_Bcast(&LG_m, 1, MPI_INT, root_process, MPI_COMM_WORLD);
+        MPI_Bcast(&edge_first[0], LG_m, MPI_INT, root_process, MPI_COMM_WORLD);
+        MPI_Bcast(&edge_second[0], LG_m, MPI_INT, root_process, MPI_COMM_WORLD);
+        MPI_Bcast(&node_val[0], LG_n + 1, MPI_INT, root_process, MPI_COMM_WORLD);
+
         vector<int> color(LG_n + 1, -1);
+        int start = 1, end, no_per_process = LG_n / numprocs;
+
+        // distributing nodes to all processes
+        for (int rec_id = 1; rec_id < numprocs; rec_id++) {
+            end = start + no_per_process - 1;
+            pair<int, int> pr = {start, end};
+            MPI_Send(&pr, 2, MPI_INT, rec_id, 0, MPI_COMM_WORLD);
+            start = end + 1;
+        }
+
+        vector<int> finished(numprocs + 1, 0);
 
         while (1) {
             int alldone = 1;
 
-            //making independent set of nodes
-            vector<int> independent_set;
+            //check if all done or not
             for (int i = 1; i <= LG_n; i++) {
                 if (color[i] != -1) {
                     continue;
                 }
-
                 alldone = 0;
-                int flag = 1;
-                for (auto neigh : LG_adj[i]) {
-                    if (color[neigh] == -1 && node_val[neigh] > node_val[i]) {
-                        flag = 0;
-                        break;
-                    }
-                }
-                if (flag == 1) {
-                    independent_set.push_back(i);
-                }
             }
 
             if (alldone == 1) {
                 break;
             }
 
-            int start = 0, no_per_process = int(independent_set.size()) / numprocs;
-
-            // distributing independent set to all processes as they can be colored parallely
+            // sending upodated colors to each process for new iteration
             for (int rec_id = 1; rec_id < numprocs; rec_id++) {
-                MPI_Send(&no_per_process, 1, MPI_INT, rec_id, CONTINUE_TAG, MPI_COMM_WORLD);
-                MPI_Send(&independent_set[start], no_per_process, MPI_INT, rec_id, CONTINUE_TAG, MPI_COMM_WORLD);
-                MPI_Send(&color[0], LG_n + 1, MPI_INT, rec_id, CONTINUE_TAG, MPI_COMM_WORLD);
-                start += no_per_process;
+                if (finished[rec_id] == 1) {
+                    continue;
+                }
+                MPI_Send(&color[0], LG_n + 1, MPI_INT, rec_id, 0, MPI_COMM_WORLD);
             }
 
             // recieving back colored nodes
             for (int rec_id = 1; rec_id < numprocs; rec_id++) {
+                if (finished[rec_id] == 1) {
+                    continue;
+                }
+
+                int done;
                 vector<pair<int, int>> changed_colors(no_per_process);
-                MPI_Recv(&changed_colors[0], 2 * (no_per_process), MPI_INT, rec_id, CONTINUE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(&done, 1, MPI_INT, rec_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Recv(&changed_colors[0], 2 * (no_per_process), MPI_INT, rec_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                finished[rec_id] = done;
+
+                // updating colors
                 for (auto pr : changed_colors) {
                     color[pr.first] = pr.second;
                 }
             }
 
             // for remaining do in root process
-            vector<int> tmp_set;
-            for (int i = start; i < independent_set.size(); i++) {
-                tmp_set.push_back(independent_set[i]);
-            }
-
+            int tmp_done = 0;
+            vector<int> independent_set;
+            find_independentSet(start, LG_n, node_val, color, LG_adj, independent_set, tmp_done);
             vector<pair<int, int>> tmp;
-            color_it(tmp_set, LG_adj, color, tmp);
+            color_it(independent_set, LG_adj, color, tmp);
         }
 
-        // stop all processses
-        for (int rec_id = 1; rec_id < numprocs; rec_id++) {
-            int a = 1;
-            MPI_Send(&a, 1, MPI_INT, rec_id, STOP_TAG, MPI_COMM_WORLD);
-        }
-
-        //printing answer
+        //output answer
         set<int> st;
         for (int i = 1; i <= LG_n; i++) {
             st.insert(color[i]);
@@ -200,36 +221,41 @@ int main(int argc, char **argv) {
         MPI_Bcast(&edge_first[0], LG_m, MPI_INT, root_process, MPI_COMM_WORLD);
         MPI_Bcast(&edge_second[0], LG_m, MPI_INT, root_process, MPI_COMM_WORLD);
 
+        node_val.resize(LG_n + 1);
+        MPI_Bcast(&node_val[0], LG_n + 1, MPI_INT, root_process, MPI_COMM_WORLD);
+
+        //making adjacency list
         vector<vector<int>> LG_adj(LG_n + 2);
         for (int i = 0; i < LG_m; i++) {
             LG_adj[edge_first[i]].push_back(edge_second[i]);
             LG_adj[edge_second[i]].push_back(edge_first[i]);
         }
 
+        // recieving start and end point of nodes of this process
+        pair<int, int> pr;
+        MPI_Recv(&pr, 2, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        int start = pr.first, end = pr.second;
+
         while (1) {
-            // recieving number of nodes
-            int no;
-            MPI_Status STATUS;
-            MPI_Recv(&no, 1, MPI_INT, root_process, MPI_ANY_TAG, MPI_COMM_WORLD, &STATUS);
-
-            if (STATUS.MPI_TAG == STOP_TAG) {
-                break;
-            }
-
-            // recieving independent set of ndoes to be colored
-            vector<int> independent_set(no);
-            MPI_Recv(&independent_set[0], no, MPI_INT, root_process, CONTINUE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
             // recieving colors
             vector<int> color(LG_n + 1);
-            MPI_Recv(&color[0], LG_n + 1, MPI_INT, root_process, CONTINUE_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&color[0], LG_n + 1, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+            // find independent set
+            int done = 1;
+            vector<int> independent_set;
+            find_independentSet(start, end, node_val, color, LG_adj, independent_set, done);
 
             //coloring this independent set of nodes
             vector<pair<int, int>> changed_colors;
             color_it(independent_set, LG_adj, color, changed_colors);
 
             // return color array
-            MPI_Send(&changed_colors[0], 2 * int(changed_colors.size()), MPI_INT, root_process, CONTINUE_TAG, MPI_COMM_WORLD);
+            MPI_Send(&done, 1, MPI_INT, root_process, 0, MPI_COMM_WORLD);
+            MPI_Send(&changed_colors[0], 2 * int(changed_colors.size()), MPI_INT, root_process, 0, MPI_COMM_WORLD);
+            if (done == 1) {
+                break;
+            }
         }
     }
 

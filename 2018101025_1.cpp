@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // taking input and output file path as input
+    // taking input and output file path as argument
     input_file_path = argv[1];
     output_file_path = argv[2];
 
@@ -31,40 +31,41 @@ int main(int argc, char **argv) {
 
     /* write your code here */
     if (rank == root_process) {
-        int n;
         ifstream fin(input_file_path);
+        //input
+        int n;
         fin >> n;
         int start = 1, no_per_process = n / numprocs;
 
+        //distribute [1, n] to all processes
         for (int rec_id = 1; rec_id < numprocs; rec_id++) {
-            int end = start + no_per_process;
-            MPI_Send(&start, 1, MPI_INT, rec_id, 0, MPI_COMM_WORLD);
-            MPI_Send(&end, 1, MPI_INT, rec_id, 0, MPI_COMM_WORLD);
-            start = end;
+            pair<int, int> pr = {start, start + no_per_process};
+            MPI_Send(&pr, 2, MPI_INT, rec_id, 0, MPI_COMM_WORLD);
+            start += no_per_process;
         }
 
-        float ans = 0, sum;
-
+        float ans = 0;
+        // do remaining in root process
         for (int i = start; i <= n; i++) {
             ans += 1.0 / (float)(i * i);
         }
 
+        float sum;
+        //recieve sum from each process
         for (int rec_id = 1; rec_id < numprocs; rec_id++) {
             MPI_Recv(&sum, 1, MPI_FLOAT, rec_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            // printf("MPI process %d received value: %f.\n", rank, sum);
             ans += sum;
         }
 
+        //output
         ofstream fout(output_file_path);
         fout << fixed << setprecision(6) << ans;
     } else {
-        int start, end;
-        MPI_Recv(&start, 1, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        MPI_Recv(&end, 1, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        // printf("MPI process %d received value: %d, %d.\n", rank, start, end);
+        pair<int, int> pr;
+        MPI_Recv(&pr, 2, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
         float sum = 0;
-        for (int i = start; i < end; i++) {
+        for (int i = pr.first; i < pr.second; i++) {
             sum += 1.0 / (float)(i * i);
         }
 

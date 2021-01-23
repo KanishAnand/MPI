@@ -2,9 +2,11 @@
 
 ## Description:
 
-A parallel approach using MPI is followed to find sum of the reciprocals of the squares of integer from 1 to N. Integers from 1 to N are divided equally to each process in form of pair of staring, ending point. Each process finds sum of reciprocal of sqaures of integers from this starting to ending point and pass back this sum to root process. Finally in root process value computed in this process and returned from each process is totalled to get the final output.
+A parallel approach using MPI is followed to find sum of the reciprocals of the squares of integer from 1 to N. Integers from 1 to N are divided equally to each process in form of pair of staring, ending point. Each process finds sum of reciprocal of sqaures of integers from this starting to ending point and pass this sum back to root process. Finally in root process value computed in this process and returned from each process is totalled to get the final output.
 
 ## Analysis
+
+- For N = 1e4 and 11 processes: Time Taken: 0.002231 seconds
 
 # Parallel Quick Sort
 
@@ -13,20 +15,22 @@ A parallel approach using MPI is followed to find sum of the reciprocals of the 
 A parallel approach using MPI is followed to sort given array using quick sort algorithm. Initially input array is divided into equal continous subarrays with size of each
 subarray depending upon total number of processes. Subarrays are passed to each process where each process sorts their recieved subarrays parallely using quick sort
 algorithm. Now after each process sorts its subarray they send back the sorted subarray to root process. Root process also sorts its own part of the subarray.
-After recieving all sorted subarray all of them are merged using `Multiset` as explained below.
+After recieving all sorted subarray all of them are merged using `C++ STL Set` as explained below.
 
-#### Merge Step:
+### Merge Step:
 
-Multiset contains smallest element of each sorted subarray. Then smallest element of these is pushed to merged sorted array and next smallest element from sorted
-subarray to which this smallest element belongs is inserted to multiset. The same process is followed till we built our full merged sorted array.
+Set contains smallest element of each sorted subarray. Then smallest element of these is pushed to merged sorted array and next smallest element from sorted
+subarray to which this smallest element belongs is inserted to set. The same process is followed till we build full merged sorted array.
 
 ## Analysis
+
+- For N = 1e6 with random values of array from 0 till 1e9 and 11 processes: Time Taken:
 
 # Parallel Edge Coloring
 
 ## Description:
 
-A parallel approach is to be followed to color the edges of given graph in such a way that no two adjacent edges have same color and maximum number of colors used is `1 + max(Delta of the original graph, Delta of the line graph)`. Initially given graph is transformed to its line graph. The line graph of an undirected graph G is another graph L(G) that represents the adjacencies between edges of G. L(G) is constructed in the following way: for each edge in G, make a vertex in L(G); for every two edges in G that have a vertex in common, make an edge between their corresponding vertices in L(G). Now for this line graph our problem is transformed to graph coloring (vertex-coloring). For this a parallel approach has been used using **Jones-Plassmann** algorithm as explained [here](https://ireneli.eu/2015/10/26/parallel-graph-coloring-algorithms/).
+A parallel approach is to be followed to color the edges of given graph in such a way that no two adjacent edges have same color and maximum number of colors used is not more than `1 + max(Delta of the original graph, Delta of the line graph)`. Initially given graph is transformed to its line graph. The line graph of an undirected graph G is another graph L(G) that represents the adjacencies between edges of G. L(G) is constructed in the following way: for each edge in G, make a vertex in L(G); for every two edges in G that have a vertex in common, make an edge between their corresponding vertices in L(G). Now for this line graph our problem is transformed to graph coloring (vertex-coloring). For this a parallel approach has been followed using **Jones-Plassmann** algorithm as explained [here](https://ireneli.eu/2015/10/26/parallel-graph-coloring-algorithms/).
 
 #### Implementation Steps:
 
@@ -39,3 +43,5 @@ A parallel approach is to be followed to color the edges of given graph in such 
 - When a process finishes coloring all its nodes stop that process and mark it as done so that root process not waits for any communication with this process now.
 
 ## Analysis
+
+- For 128 vertices and 774 edges(random) and 11 processes: Time Taken: 0.037641 seconds

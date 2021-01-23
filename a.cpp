@@ -11,7 +11,7 @@ using namespace std;
 #define all(x) x.begin(), x.end()
 #define sz(x) (lli)(x.size())
 #define len(x) (lli)(x.length())
-const lli MOD = 1e9 + 7;
+const lli MOD = 1e9;
 const double PI = 2 * acos(0.0);
 // cout << fixed << setprecision(0) << pi <<endl;
 // typedef tree<int, null_type, less<int>, rb_tree_tag,

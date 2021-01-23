@@ -6,7 +6,7 @@
 using namespace std;
 typedef long long int ll;
 
-int partition(int arr[], int beg, int end) {
+int partition(vector<int> &arr, int beg, int end) {
     // chosing random pivot
     int ind = beg + rand() % (end - beg + 1);
     int pivot = arr[ind];
@@ -26,7 +26,7 @@ int partition(int arr[], int beg, int end) {
     return pivot_ind;
 }
 
-void quick_sort(int arr[], int beg, int end) {
+void quick_sort(vector<int> &arr, int beg, int end) {
     if (beg < end) {
         int pivot = partition(arr, beg, end);
         quick_sort(arr, beg, pivot - 1);
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    // taking input and output file path as input
+    // taking input and output file path as argument
     input_file_path = argv[1];
     output_file_path = argv[2];
 
@@ -62,91 +62,93 @@ int main(int argc, char **argv) {
         int n;
         ifstream fin(input_file_path);
         fin >> n;
-        int arr[n];
+        vector<int> arr;
 
-        vector<int> tmp;
+        // vector<int> tmp;
 
+        int a;
+        //input
         for (int i = 0; i < n; i++) {
-            fin >> arr[i];
-            tmp.push_back(arr[i]);
+            fin >> a;
+            arr.push_back(a);
+            // tmp.push_back(arr[i]);
         }
 
         int start = 0, no_per_process = n / numprocs;
+
+        // sending length of subarray to each process
+        MPI_Bcast(&no_per_process, 1, MPI_INT, root_process, MPI_COMM_WORLD);
+
+        // sending subarray
         for (int rec_id = 1; rec_id < numprocs; rec_id++) {
-            // sending length of subarray
-            MPI_Send(&no_per_process, 1, MPI_INT, rec_id, 0, MPI_COMM_WORLD);
-            // sending subarray
-            MPI_Send(arr + start, no_per_process, MPI_INT, rec_id, 0, MPI_COMM_WORLD);
+            MPI_Send(&arr[start], no_per_process, MPI_INT, rec_id, 0, MPI_COMM_WORLD);
             start += no_per_process;
         }
 
-        quick_sort(arr + start, 0, n - 1 - start);
+        // sorting remaining in root process
+        quick_sort(arr, start, n - 1);
 
         vector<vector<int>> sorted_parts(numprocs);
 
-        for (int i = 0; i <= n - 1 - start; i++) {
-            sorted_parts[0].push_back(arr[start + i]);
-        }
+        // storing all sorted subarrays to finally do merge step
+        sorted_parts[0] = {arr.begin() + start, arr.end()};
 
+        // recieve back sorted subarray
         for (int rec_id = 1; rec_id < numprocs; rec_id++) {
-            int arr2[no_per_process];
-            // recieve back sorted subarray
-            MPI_Recv(arr2, no_per_process, MPI_INT, rec_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            for (int i = 0; i < no_per_process; i++) {
-                sorted_parts[rec_id].push_back(arr2[i]);
-            }
+            vector<int> arr2(no_per_process);
+            MPI_Recv(&arr2[0], no_per_process, MPI_INT, rec_id, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            sorted_parts[rec_id] = arr2;
         }
 
-        vector<int> ans, ind(numprocs + 2, 0);
+        vector<int> ind(numprocs, 0), ans;
+        set<pair<int, int>> st;
 
         // merging all sorted subarrays
+        for (int i = 0; i < numprocs; i++) {
+            if (sorted_parts[i].size() != 0) {
+                st.insert({sorted_parts[i][0], i});
+            }
+        }
+
         for (int i = 0; i < n; i++) {
-            int flag = 0, p;
-            for (int j = 0; j < numprocs; j++) {
-                if (ind[j] != sorted_parts[j].size()) {
-                    if (flag == 0) {
-                        p = sorted_parts[j][ind[j]];
-                        flag = 1;
-                    }
-                    p = min(p, sorted_parts[j][ind[j]]);
-                }
+            auto it = st.begin();
+            pair<int, int> pr = *it;
+            st.erase(it);
+            ans.push_back(pr.first);
+            ind[pr.second]++;
+            if (ind[pr.second] != sorted_parts[pr.second].size()) {
+                st.insert({sorted_parts[pr.second][ind[pr.second]], pr.second});
             }
-
-            for (int j = 0; j < numprocs; j++) {
-                if (ind[j] != sorted_parts[j].size()) {
-                    if (sorted_parts[j][ind[j]] == p) {
-                        ind[j]++;
-                        break;
-                    }
-                }
-            }
-            ans.push_back(p);
         }
 
-        sort(tmp.begin(), tmp.end());
+        // sort(tmp.begin(), tmp.end());
 
-        if (tmp == ans) {
-            cout << "YES" << endl;
-        } else {
-            cout << "NO" << endl;
-        }
+        // if (tmp == ans) {
+        //     cout << "YES" << endl;
+        // } else {
+        //     cout << "NO" << endl;
+        // }
 
+        // output
         ofstream fout(output_file_path);
         for (int i = 0; i < n; i++) {
             fout << ans[i] << " ";
         }
 
     } else {
-        int no;
         // recieving length of subarray
-        MPI_Recv(&no, 1, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        int arr2[no];
+        int no;
+        MPI_Bcast(&no, 1, MPI_INT, root_process, MPI_COMM_WORLD);
+
         // recieving subarray
-        MPI_Recv(arr2, no, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        vector<int> arr2(no);
+        MPI_Recv(&arr2[0], no, MPI_INT, root_process, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
         // sorting subarray
         quick_sort(arr2, 0, no - 1);
+
         // sending back sorted subarray
-        MPI_Send(arr2, no, MPI_INT, root_process, 0, MPI_COMM_WORLD);
+        MPI_Send(&arr2[0], no, MPI_INT, root_process, 0, MPI_COMM_WORLD);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
