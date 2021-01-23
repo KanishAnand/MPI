@@ -64,14 +64,11 @@ int main(int argc, char **argv) {
         fin >> n;
         vector<int> arr;
 
-        // vector<int> tmp;
-
         int a;
         //input
         for (int i = 0; i < n; i++) {
             fin >> a;
             arr.push_back(a);
-            // tmp.push_back(arr[i]);
         }
 
         int start = 0, no_per_process = n / numprocs;
@@ -120,14 +117,6 @@ int main(int argc, char **argv) {
                 st.insert({sorted_parts[pr.second][ind[pr.second]], pr.second});
             }
         }
-
-        // sort(tmp.begin(), tmp.end());
-
-        // if (tmp == ans) {
-        //     cout << "YES" << endl;
-        // } else {
-        //     cout << "NO" << endl;
-        // }
 
         // output
         ofstream fout(output_file_path);

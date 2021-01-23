@@ -6,7 +6,7 @@ A parallel approach using MPI is followed to find sum of the reciprocals of the 
 
 ## Analysis
 
-- For N = 1e4 and 11 processes: Time Taken: 0.002231 seconds
+- For N = 1e4 and 11 processes: Time Taken: 0.0002231 seconds
 
 # Parallel Quick Sort
 
@@ -24,7 +24,7 @@ subarray to which this smallest element belongs is inserted to set. The same pro
 
 ## Analysis
 
-- For N = 1e6 with random values of array from 0 till 1e9 and 11 processes: Time Taken:
+- For N = 1e6 with random values of array from 0 till 1e9 and 11 processes: Time Taken: 0.7634
 
 # Parallel Edge Coloring
 
