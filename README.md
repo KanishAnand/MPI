@@ -1,6 +1,6 @@
 # MPI
 
-Few algorithms implemented in distributed manner in C++ using MPI.
+Few algorithms implemented in distributed manner in C++ using [MPI](https://www.open-mpi.org/).
 
 # Run
 
