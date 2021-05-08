@@ -12,6 +12,8 @@ For N = 10000, Time Taken (in seconds):
 - 4 Processes: 0.0002283
 - 11 Processes: 0.0002231
 
+Time will increase with increase in value of N almost monotonically due to increased number of operations.
+
 # Parallel Quick Sort
 
 ## Description:
@@ -33,6 +35,9 @@ For N = 1e6 with random values of array from 0 till 1e9, Time Taken (in seconds)
 - 1 Process: 0.718
 - 4 Processes: 0.7634
 - 11 Processes: 0.869
+
+Time will increase with increase in value of N almost monotonically due to increased number of operations.  
+It is a bit surprising thing to note that instead of decreasing time is increasing with increase in number of processes but it can be justified as overhead of sending and recieving from processes is more than time taken to compute very simple quick sort.
 
 # Parallel Edge Coloring
 
@@ -57,3 +62,4 @@ For 128 vertices and 774 edges(random), Time Taken (in seconds):
 - 1 Process: 0.03832
 - 4 Processes: 0.04283
 - 11 Processes: 0.037641
+  Time will increase with increase in value of N almost monotonically due to increased number of operations.
