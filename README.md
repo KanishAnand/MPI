@@ -4,6 +4,7 @@ Few algorithms implemented in distributed manner in C++ using [MPI](https://www.
 
 # Run
 
+- MPI installation instructions: https://ireneli.eu/2016/02/15/installation/
 - Compile using: `mpic++ filename`
 - Execute using: `mpirun -np <no of processes> ./a.out <input file path> <output file path>`
 
