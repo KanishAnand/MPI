@@ -2,7 +2,7 @@
 
 Few algorithms implemented in distributed manner in C++ using [MPI](https://www.open-mpi.org/).
 
-# Run
+## Run
 
 - MPI installation instructions: https://ireneli.eu/2016/02/15/installation/
 - Compile using: `mpic++ filename`
