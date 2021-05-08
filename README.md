@@ -2,6 +2,11 @@
 
 Few algorithms implemented in distributed manner in C++ using MPI.
 
+# Run
+
+- Compile using: `mpic++ filename`
+- Execute using: `mpirun -np <no of processes> ./a.out <input file path> <output file path>`
+
 ## Parallel Sum
 
 ### Description:
