@@ -24,6 +24,8 @@ For N = 10000, Time Taken (in seconds):
 
 Time will increase with increase in value of N almost monotonically due to increased number of operations.
 
+---
+
 ## Parallel Quick Sort
 
 ### Description:
@@ -48,6 +50,8 @@ For N = 1e6 with random values of array from 0 till 1e9, Time Taken (in seconds)
 
 Time will increase with increase in value of N almost monotonically due to increased number of operations.  
 It is a bit surprising thing to note that instead of decreasing time is increasing with increase in number of processes but it can be justified as overhead of sending and recieving from processes is more than time taken to compute very simple quick sort.
+
+---
 
 ## Parallel Edge Coloring
 
